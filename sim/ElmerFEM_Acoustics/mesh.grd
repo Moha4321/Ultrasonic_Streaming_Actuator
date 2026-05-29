@@ -1,0 +1,15 @@
+Version = 210903
+Coordinate System = Cartesian 3D
+Subcell Divisions in 3D = 1 1 1
+Subcell Limits 1 = -0.05 0.05
+Subcell Limits 2 = -0.05 0.05
+Subcell Limits 3 =  0.00 0.10
+Material Ids, 3D = 1
+Element Degree = 1
+Element Innernodes = False
+! 60x60x80 elements = 288,000 cells. 
+! Element size = ~1.25mm. Fits the Nyquist criterion for 8.5mm wavelength.
+! Uses ~300MB of RAM, highly optimized for Mac Mini M4.
+Element Divisions 1 = 60
+Element Divisions 2 = 60
+Element Divisions 3 = 80

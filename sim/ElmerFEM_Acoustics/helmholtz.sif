@@ -1,0 +1,98 @@
+Header
+  CHECK KEYWORDS Warn
+  Mesh DB "." "mesh"
+  Include Path ""
+  Results Directory ""
+End
+
+Simulation
+  Max Output Level = 5
+  Coordinate System = Cartesian
+  Coordinate Mapping(3) = 1 2 3
+  Simulation Type = Steady state
+  Steady State Max Iterations = 1
+  Output Intervals = 1
+  Post File = "acoustic_field.vtu"
+  ! 40 kHz frequency => angular frequency omega = 2*pi*40000
+  Angular Frequency = 251327.4
+End
+
+Constants
+  Gravity(4) = 0 -1 0 9.82
+  Stefan Boltzmann = 5.67e-08
+  Permittivity of Vacuum = 8.8542e-12
+  Boltzmann Constant = 1.3807e-23
+  Unit Charge = 1.602e-19
+End
+
+Body 1
+  Target Bodies(1) = 1
+  Name = "Air_Volume"
+  Equation = 1
+  Material = 1
+End
+
+Solver 1
+  Equation = Helmholtz Equation
+  Procedure = "HelmholtzSolve" "HelmholtzSolver"
+  Variable = -dofs 2 Pressure
+  Exec Solver = Always
+  Stabilize = True
+  Bubbles = False
+  Lumped Mass Matrix = False
+  Optimize Bandwidth = True
+  Steady State Convergence Tolerance = 1.0e-5
+  Nonlinear System Convergence Tolerance = 1.0e-7
+  Nonlinear System Max Iterations = 20
+  Nonlinear System Newton After Iterations = 3
+  Nonlinear System Newton After Tolerance = 1.0e-3
+  Nonlinear System Relaxation Factor = 1
+  Linear System Solver = Iterative
+  Linear System Iterative Method = BiCGStab
+  Linear System Max Iterations = 1000
+  Linear System Convergence Tolerance = 1.0e-8
+  Linear System Preconditioning = ILU1
+  Linear System ILUT Tolerance = 1.0e-3
+  Linear System Abort Not Converged = False
+  Linear System Residual Output = 10
+  Linear System Precondition Recompute = 1
+End
+
+Equation 1
+  Name = "Helmholtz"
+  Active Solvers(1) = 1
+End
+
+Material 1
+  Name = "Air (room temperature)"
+  Sound speed = 343.0
+  Density = 1.204
+End
+
+! --- BOUNDARY CONDITIONS ---
+
+! Boundary 1-4: Sides. Radiation (Absorbing) Boundaries
+Boundary Condition 1
+  Target Boundaries(4) = 1 2 3 4
+  Wave impedance 1 = 412.97 ! Density * Speed of Sound (1.204 * 343)
+End
+
+! Boundary 5: Bottom (Z=0). The Phased Array.
+! Analytically applies Phase Focus to coordinates within a 42x42mm square.
+! Focus Target: Z = 0.05m.
+Boundary Condition 2
+  Target Boundaries(1) = 5
+  Name = "Transducer_Array"
+  ! Real part of pressure: P0 * cos(phase)
+  Pressure 1 = Variable Coordinate 1, Coordinate 2
+    Real MATC "tx(0)>-0.042 & tx(0)<0.042 & tx(1)>-0.042 & tx(1)<0.042 ? 100.0 * cos(732.73*(0.0776 - sqrt(tx(0)*tx(0) + tx(1)*tx(1) + 0.0025))) : 0.0"
+  ! Imaginary part of pressure: P0 * sin(phase)
+  Pressure 2 = Variable Coordinate 1, Coordinate 2
+    Real MATC "tx(0)>-0.042 & tx(0)<0.042 & tx(1)>-0.042 & tx(1)<0.042 ? 100.0 * sin(732.73*(0.0776 - sqrt(tx(0)*tx(0) + tx(1)*tx(1) + 0.0025))) : 0.0"
+End
+
+! Boundary 6: Top (Z=0.10). Radiation Boundary.
+Boundary Condition 3
+  Target Boundaries(1) = 6
+  Wave impedance 1 = 412.97
+End
