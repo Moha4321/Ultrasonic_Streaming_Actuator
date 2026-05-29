@@ -1,0 +1,54 @@
+FoamFile { version 2.0; format ascii; class dictionary; object fvOptions; }
+
+momentumSource
+{
+    type            vectorCodedSource;
+    active          true;
+    name            acousticStreamingForce;
+    selectionMode   all;
+    
+    vectorCodedSourceCoeffs
+    {
+        selectionMode   all;
+        fields          (U);
+        
+        codeInclude
+        #{
+        #};
+        
+        codeCorrect
+        #{
+        #};
+        
+        codeConstrain
+        #{
+        #};
+        
+        codeAddSup
+        #{
+            // 1. Check if F_rad is loaded in RAM.
+            if (!mesh().foundObject<volVectorField>("F_rad"))
+            {
+                Info<< "Loading Acoustic Force Field (F_rad) from 0/ directory..." << endl;
+                new volVectorField
+                (
+                    IOobject
+                    (
+                        "F_rad",
+                        "0", // <--- THE FIX: Explicitly look in the "0" folder
+                        mesh(),
+                        IOobject::MUST_READ,
+                        IOobject::NO_WRITE
+                    ),
+                    mesh()
+                );
+            }
+
+            // 2. Look it up from the memory registry
+            const volVectorField& F_rad = mesh().lookupObject<volVectorField>("F_rad");
+
+            // 3. Apply the acoustic body force to the Navier-Stokes momentum matrix
+            eqn -= F_rad; 
+        #};
+    }
+}

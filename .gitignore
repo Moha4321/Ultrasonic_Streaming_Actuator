@@ -4,3 +4,10 @@
 *.out
 sim/ElmerFEM_Acoustics/mesh/
 *.vtu
+sim/OpenFOAM_Fluid/0.*/
+sim/OpenFOAM_Fluid/[0-9]/
+sim/OpenFOAM_Fluid/dynamicCode/
+sim/OpenFOAM_Fluid/openfoam.foam
+*.dylib
+*.mod
+*.mov

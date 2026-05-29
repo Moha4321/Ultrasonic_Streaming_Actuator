@@ -13,7 +13,6 @@ Simulation
   Steady State Max Iterations = 1
   Output Intervals = 1
   Post File = "acoustic_field.vtu"
-  ! 40 kHz frequency => angular frequency omega = 2*pi*40000
   Angular Frequency = 251327.4
 End
 
@@ -71,28 +70,26 @@ End
 
 ! --- BOUNDARY CONDITIONS ---
 
-! Boundary 1-4: Sides. Radiation (Absorbing) Boundaries
+! Boundary 1: Bottom (Z=0). The Phased Array.
 Boundary Condition 1
-  Target Boundaries(4) = 1 2 3 4
-  Wave impedance 1 = 412.97 ! Density * Speed of Sound (1.204 * 343)
-End
-
-! Boundary 5: Bottom (Z=0). The Phased Array.
-! Analytically applies Phase Focus to coordinates within a 42x42mm square.
-! Focus Target: Z = 0.05m.
-Boundary Condition 2
-  Target Boundaries(1) = 5
+  Target Boundaries(1) = 1
   Name = "Transducer_Array"
-  ! Real part of pressure: P0 * cos(phase)
-  Pressure 1 = Variable Coordinate 1, Coordinate 2
-    Real MATC "tx(0)>-0.042 & tx(0)<0.042 & tx(1)>-0.042 & tx(1)<0.042 ? 100.0 * cos(732.73*(0.0776 - sqrt(tx(0)*tx(0) + tx(1)*tx(1) + 0.0025))) : 0.0"
-  ! Imaginary part of pressure: P0 * sin(phase)
-  Pressure 2 = Variable Coordinate 1, Coordinate 2
-    Real MATC "tx(0)>-0.042 & tx(0)<0.042 & tx(1)>-0.042 & tx(1)<0.042 ? 100.0 * sin(732.73*(0.0776 - sqrt(tx(0)*tx(0) + tx(1)*tx(1) + 0.0025))) : 0.0"
+  Pressure 1 = Variable Time
+    Real Procedure "PhasedArray" "PressureReal"
+  Pressure 2 = Variable Time
+    Real Procedure "PhasedArray" "PressureImag"
 End
 
-! Boundary 6: Top (Z=0.10). Radiation Boundary.
+! Boundary 2: Top (Z=0.10). Radiation (Absorbing) Boundary
+Boundary Condition 2
+  Target Boundaries(1) = 2
+  Name = "Top_Absorbing"
+  Wave impedance 1 = 412.97
+End
+
+! Boundaries 3, 4, 5, 6: Sides. Radiation Boundaries
 Boundary Condition 3
-  Target Boundaries(1) = 6
+  Target Boundaries(4) = 3 4 5 6
+  Name = "Side_Absorbing"
   Wave impedance 1 = 412.97
 End
