@@ -59,4 +59,33 @@ The acoustic radiation force $\mathbf{F}_{\text{rad}}$ is defined by the spatial
 \section{Conclusion \& Next Steps}
 With the theoretical framework defined, the next phase bridges the analytical mathematics to finite-volume simulations. The time-delay equations (Eq. 2) will inform the boundary conditions of a linear Helmholtz solver to yield $\mathbf{u}_1$. Subsequently, Eq. 6 will be computed discretely to generate $\mathbf{F}_{\text{rad}}$, serving as the momentum source term in an incompressible Navier-Stokes solver.
 
+\section{Computational Fluid Dynamics \& Navier-Stokes Integration}
+\subsection{Numerical Discretization and Dynamic Compilation}
+To translate the derived acoustic radiation force $\mathbf{F}_{\text{rad}}$ into a macroscopic kinematic field, the incompressible, transient Navier-Stokes (NS) equations were solved using OpenFOAM (\textit{pimpleFoam}). The governing momentum equation is defined as:
+\begin{equation}
+    \frac{\partial \mathbf{U}}{\partial t} + \nabla \cdot (\mathbf{U} \otimes \mathbf{U}) - \nabla \cdot (\nu_{\text{eff}} \nabla \mathbf{U}) = -\nabla p + \frac{\mathbf{F}_{\text{rad}}}{\rho_0}
+\end{equation}
+where $\nu_{\text{eff}}$ is the kinematic viscosity and $\mathbf{U}$ is the macroscopic velocity vector. 
+
+A high-fidelity structured hexahedral mesh of 512,000 cells was generated. To bypass the limitations of standard GUI-based solvers, a custom C++ memory hook was written using OpenFOAM's \texttt{vectorCodedSource}. This allowed the decoupled Reynolds stress tensor, calculated via Python from the ElmerFEM Helmholtz solution, to be injected directly into the NS momentum matrix at runtime. The solver utilized adaptive time-stepping, dynamically adjusting $\Delta t$ to maintain a Courant-Friedrichs-Lewy (CFL) number of $\text{Co} \le 0.95$. 
+
+Running natively on an Apple M4 architecture with 16GB unified memory, the solver achieved matrix convergence (residuals $<10^{-6}$) in approximately 15 minutes of compute time for 100 high-resolution frames.
+
+\subsection{Physical Limits and Shockwave Bounding}
+The computational model was initially subjected to an amplified force scaling to evaluate the mathematical limits of the algorithm. By scaling the virtual acoustic pressure, the simulation yielded a highly concentrated, steady-state synthetic jet velocity of $6.98\,\text{m/s}$. 
+
+While mathematically stable, evaluating this result against real-world electro-acoustic limitations provides crucial engineering boundaries. The acoustic streaming force scales with the square of the acoustic pressure ($F \propto p^2$). To generate a $6.98\,\text{m/s}$ jet, the theoretical sound pressure level (SPL) at the focal point must approach $181\,\text{dB}$ ($\approx 22,300\,\text{Pa}$). 
+
+In atmospheric conditions, such extreme pressures exit the linear acoustic regime and induce shockwave steepening due to nonlinear wave propagation. Furthermore, driving a piezoelectric transducer to synthesize $181\,\text{dB}$ would exceed the mechanical fracture limits of standard PZT ceramics. Therefore, we constrain the physical operational target of the hardware to a localized SPL of $160\,\text{dB}$, which scales the expected empirical jet velocity to a physically sustainable $0.5\,\text{m/s}$ to $1.5\,\text{m/s}$.
+
+\section{Electrodynamic (E\&M) Simulation Requirements}
+The mechanical success of the synthetic jet is entirely dependent on the structural integrity of the electrical power network. A piezoelectric array of 64 transducers acts as a massive bulk capacitor ($C_{\text{total}} \approx 153\,\text{nF}$). 
+
+The instantaneous current $I$ required to charge this capacitive array to $24\,\text{V}$ at a switching interval $dt \approx 25\,\text{ns}$ is governed by:
+\begin{equation}
+    I(t) = C_{\text{total}} \frac{dV}{dt} + \frac{V}{R}
+\end{equation}
+which demands transient current spikes exceeding $140\,\text{A}$. If unmitigated, the equivalent series inductance (ESL) of the PCB traces will trigger catastrophic $Ldi/dt$ voltage overshoots, leading to logic brown-outs and thermal destruction of the MOSFET gate drivers.
+
+Before executing the PCB layout in KiCad, a rigorous Electrodynamic (SPICE) Digital Twin must be constructed. This E\&M simulation will mathematically derive the critical damping resistance ($R_s$), the precise bulk electrolytic capacitance required to prevent 24V supply droop, and the high-frequency ceramic decoupling matrix needed to supply the transient switching current.
 \end{document}
