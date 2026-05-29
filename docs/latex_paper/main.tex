@@ -1,0 +1,62 @@
+\documentclass[journal, 10pt]{IEEEtran}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{cite}
+\usepackage{hyperref}
+
+\title{Solid-State Steerable Synthetic Jet Actuator via Phased-Array Acoustic Streaming}
+\author{Mohana Rangan Desigan\\ \textit{Mac Mini M4 Compute Node, Independent Research}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper establishes the theoretical baseline and digital twin methodology for a solid-state synthetic jet actuator. Utilizing a 64-element uniform rectangular array (URA) of 40\,kHz piezoelectric transducers, macroscopic fluid flow is generated entirely through the nonlinear attenuation of finite-amplitude acoustic waves. By coupling the Lighthill-Nyborg acoustic streaming equations with phased-array beamforming delay laws, we define a computational pipeline that extracts the time-averaged Reynolds stress tensor from a linear Helmholtz acoustic solution and applies it as a steady-state momentum source in the incompressible Navier-Stokes equations.
+\end{abstract}
+
+\section{Introduction \& System Architecture}
+Traditional fluid boundary-layer control systems, such as Dielectric Barrier Discharge (DBD) plasma actuators, suffer from high-voltage requirements, ozone generation, and environmental instability. We propose an alternative exploiting Eckart bulk acoustic streaming. 
+
+The physical hardware is constrained to an $8 \times 8$ planar array of 40\,kHz transducers with a pitch of $d = 10.5\,\text{mm}$. Driven at $V_{DD} = 24\,\text{V}$, the system acts as a solid-state synthetic jet. Because the array pitch exceeds the spatial Nyquist criterion ($\lambda/2 \approx 4.28\,\text{mm}$), grating lobes are unavoidable, necessitating strict spatial targeting. Empirical baseline measurements suggest maximum achievable time-averaged flow velocities on the order of $0.1\,\text{m/s}$ to $0.5\,\text{m/s}$ at high Sound Pressure Levels (SPL).
+
+\section{Phased-Array Focusing Mathematics}
+To synthesize a focused momentum jet at an arbitrary spatial coordinate $\mathbf{r}_f = (x_f, y_f, z_f)$, the acoustic wavefronts from all $N$ elements must arrive perfectly in phase. Let the position of the $i$-th transducer be $\mathbf{r}_i = (x_i, y_i, 0)$.
+
+The geometric distance from element $i$ to the focal point is:
+\begin{equation}
+    R_i = \|\mathbf{r}_i - \mathbf{r}_f\| = \sqrt{(x_i - x_f)^2 + (y_i - y_f)^2 + z_f^2}
+\end{equation}
+To ensure simultaneous wavefront arrival, we define the time-delay law $\Delta t_i$ relative to the element with the shortest path:
+\begin{equation}
+    \Delta t_i = \frac{R_i}{c_0} - \frac{\min_j R_j}{c_0}
+\end{equation}
+where $c_0 \approx 343\,\text{m/s}$ is the local speed of sound in air.
+
+Due to spatial aliasing ($d > \lambda/2$), parasitic intensity maxima (grating lobes) will appear at angles $\theta_k$ satisfying:
+\begin{equation}
+    \sin\theta_k = \frac{k\lambda}{d} - \sin\theta, \quad k=\pm 1, \pm 2, \dots
+\end{equation}
+These lobes will consume a fraction of the acoustic energy, implicitly bounding the maximum magnitude of the resulting streaming velocity.
+
+\section{Acoustic Streaming Theory}
+The generation of macroscopic wind from acoustic waves is a second-order nonlinear phenomenon. We decouple the physics using perturbation theory, where the instantaneous velocity $\mathbf{u}$ and density $\rho$ are expanded as:
+\begin{align}
+    \mathbf{u} &= \epsilon \mathbf{u}_1 + \epsilon^2 \mathbf{u}_2 \\
+    \rho &= \rho_0 + \epsilon \rho_1 + \epsilon^2 \rho_2
+\end{align}
+where subscript $1$ denotes the first-order (40\,kHz) acoustic field, and subscript $2$ denotes the steady (DC) fluid flow.
+
+As derived by Nyborg and Lighthill, time-averaging the compressible Navier-Stokes equations over one acoustic period reveals that the first-order momentum flux leaves a non-zero residual force. The time-averaged second-order momentum equation behaves as a Stokes flow driven by a volumetric body force density $\mathbf{F}_{\text{rad}}$:
+\begin{equation}
+    \mu\nabla^2\langle \mathbf{u}_2 \rangle - \nabla \langle p_2 \rangle + \mathbf{F}_{\text{rad}} = 0
+\end{equation}
+The acoustic radiation force $\mathbf{F}_{\text{rad}}$ is defined by the spatial divergence of the Reynolds stress tensor of the first-order velocity field:
+\begin{equation}
+    F_{\text{rad},i} = -\frac{\partial}{\partial x_j} \bigl\langle \rho_0 u_{1,i} u_{1,j} \bigr\rangle
+\end{equation}
+
+\section{Conclusion \& Next Steps}
+With the theoretical framework defined, the next phase bridges the analytical mathematics to finite-volume simulations. The time-delay equations (Eq. 2) will inform the boundary conditions of a linear Helmholtz solver to yield $\mathbf{u}_1$. Subsequently, Eq. 6 will be computed discretely to generate $\mathbf{F}_{\text{rad}}$, serving as the momentum source term in an incompressible Navier-Stokes solver.
+
+\end{document}
